@@ -647,17 +647,6 @@
       <div class="section-body open">
         <div class="step">
           <span class="step-mark">5.1</span>
-          <h3>ทดสอบจากเครื่องอื่น</h3>
-          <div class="why"> เพื่อยืนยันว่า CrowdSec จับ IP ที่ Login ผิดซ้ำได้จริง<br>ใส่ <code>testuser</code>
-            และกรอกรหัสผ่านผิดติดกัน 10+ ครั้ง</div>
-          <div class="code-wrap">
-            <div class="code-header"><span>bash</span><button class="copy-btn"
-                data-code="ssh testuser@IP_ALMALINUX">คัดลอก</button></div>
-            <pre><code>ssh testuser@IP_ALMALINUX</code></pre>
-          </div>
-        </div>
-        <div class="step">
-          <span class="step-mark">5.2</span>
           <h3>ทางลัด: จำลอง Login ล้มเหลวด้วย logger (ไม่ต้องมีเครื่องอื่น)</h3>
           <div class="why"> การใส่รหัสผ่านจริง ๆ ซ้ำ ๆ อาจช้าและผิดพลาด ให้ใช้คำสั่งนี้เขียนแถว Log SSH ปลอมลงในระบบแทน
             — รัน <b>ติดกัน 5–6 ครั้ง</b> เพื่อจำลองการ Login SSH ล้มเหลวจาก IP เดียวกันซ้ำ ๆ</div>
@@ -688,7 +677,7 @@ logger -t sshd "Failed password for invalid user testuser from 198.51.100.50 por
             จริงจากเครื่องอื่น (ขั้น 5.1)</div>
         </div>
         <div class="step">
-          <span class="step-mark">5.3</span>
+          <span class="step-mark">5.2</span>
           <h3>กลับมาตรวจสอบ Alert</h3>
           <div class="code-wrap">
             <div class="code-header"><span>bash</span><button class="copy-btn"
@@ -697,7 +686,7 @@ logger -t sshd "Failed password for invalid user testuser from 198.51.100.50 por
           </div>
         </div>
         <div class="step">
-          <span class="step-mark">5.4</span>
+          <span class="step-mark">5.3</span>
           <h3>ตรวจสอบ Decision</h3>
           <div class="code-wrap">
             <div class="code-header"><span>bash</span><button class="copy-btn"
@@ -796,236 +785,6 @@ logger -t sshd "Failed password for invalid user testuser from 198.51.100.50 por
         </div>
       </div>
     </section>
-
-    <!-- ============ ตอน 8 ============ -->
-    <section id="part8">
-      <div class="section-head open" onclick="toggle(this)">
-        <span class="num">8</span>
-        <h2>ตั้งค่า Discord Notification</h2><span class="chev">▾</span>
-      </div>
-      <div class="section-body open">
-        <div class="step">
-          <span class="step-mark">8.1</span>
-          <h3>เปิดไฟล์ Notification</h3>
-          <div class="code-wrap">
-            <div class="code-header"><span>bash</span><button class="copy-btn"
-                data-code="sudo nano /etc/crowdsec/notifications/http.yaml">คัดลอก</button></div>
-            <pre><code>sudo nano /etc/crowdsec/notifications/http.yaml</code></pre>
-          </div>
-        </div>
-
-        <div class="step">
-          <span class="step-mark">8.2</span>
-          <h3>ใส่ Configuration</h3>
-          <div class="why"> รูปแบบ (format) นี้กำหนดว่าข้อความที่ส่งไป Discord จะมี Blocked IP และ Reason</div>
-          <div class="code-wrap">
-            <div class="code-header"><span>yaml</span><button class="copy-btn" data-code='type: http
-
-name: discord_default
-
-log_level: info
-
-format: |
-  {
-    "content": "🚨 **CrowdSec Alert** 🚨\n**Blocked IP:** {{range .}}{{.Source.IP}}{{end}}\n**Reason:** {{range .}}{{.Scenario}}{{end}}"
-  }
-
-timeout: 5s
-
-method: POST
-
-url: "https://discord.com/api/webhooks/YOUR_WEBHOOK_URL_HERE"
-
-headers:
-  Content-Type: application/json'>คัดลอก</button></div>
-            <pre class="code-yaml"><code>type: http
-
-name: discord_default
-
-log_level: info
-
-format: |
-  {
-    "content": "🚨 **CrowdSec Alert** 🚨\n**Blocked IP:** {{range .}}{{.Source.IP}}{{end}}\n**Reason:** {{range .}}{{.Scenario}}{{end}}"
-  }
-
-timeout: 5s
-
-method: POST
-
-url: "https://discord.com/api/webhooks/YOUR_WEBHOOK_URL_HERE"
-
-headers:
-  Content-Type: application/json</code></pre>
-          </div>
-        </div>
-
-        <div class="step">
-          <span class="step-mark">8.3</span>
-          <h3>เปลี่ยน Webhook URL</h3>
-          <div class="why"> เติม URL จริงแทนที่ข้อความ <code>YOUR_WEBHOOK_URL_HERE</code> จากช่อง Discord<br>ดูได้ที่
-            Discord ➜ Server Settings ➜ Integrations ➜ Webhooks</div>
-          <div class="output">YOUR_WEBHOOK_URL_HERE → ใส่ Webhook URL ของคุณ</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============ ตอน 9 ============ -->
-    <section id="part9">
-      <div class="section-head open" onclick="toggle(this)">
-        <span class="num">9</span>
-        <h2>เชื่อม Notification เข้ากับ Profile</h2><span class="chev">▾</span>
-      </div>
-      <div class="section-body open">
-        <div class="step">
-          <span class="step-mark">9.1</span>
-          <h3>เปิดไฟล์ Profile</h3>
-          <div class="code-wrap">
-            <div class="code-header"><span>bash</span><button class="copy-btn"
-                data-code="sudo nano /etc/crowdsec/profiles.yaml">คัดลอก</button></div>
-            <pre><code>sudo nano /etc/crowdsec/profiles.yaml</code></pre>
-          </div>
-        </div>
-
-        <div class="step">
-          <span class="step-mark">9.2</span>
-          <h3>เพิ่ม/แก้ไข Profile</h3>
-          <div class="why"> ตัวอย่างใช้งานจริง — มีบรรทัดคอมเมนต์ <code># Administrative profile</code>
-            กำกับหัวข้อไว้ด้วย ใช้แทนทั้งไฟล์ได้เลย</div>
-          <div class="code-wrap">
-            <div class="code-header"><span>yaml</span><button class="copy-btn" data-code='name: default_ip_remediation
-# Administrative profile
-filters:
- - Alert.Remediation == true && Alert.GetScope() == "Ip"
-decisions:
- - type: ban
-   duration: 4h
-notifications:
-  - discord_default
-on_success: break'>คัดลอก</button></div>
-            <pre class="code-yaml"><code>name: default_ip_remediation
-# Administrative profile
-filters:
- - Alert.Remediation == true && Alert.GetScope() == "Ip"
-decisions:
- - type: ban
-   duration: 4h
-notifications:
-  - discord_default
-on_success: break</code></pre>
-          </div>
-          <div class="callout warn"><b>⚠️ สำคัญมาก</b>ชื่อ <code>discord_default</code> ในไฟล์นี้ <b>ต้องตรงกับ</b>
-            ชื่อในไฟล์ <code>/etc/crowdsec/notifications/http.yaml</code> จึงจะเชื่อมกันได้</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============ ตอน 10 ============ -->
-    <section id="part10">
-      <div class="section-head open" onclick="toggle(this)">
-        <span class="num">10</span>
-        <h2>ตรวจสอบและรีสตาร์ท</h2><span class="chev">▾</span>
-      </div>
-      <div class="section-body open">
-        <div class="step">
-          <span class="step-mark">10.1</span>
-          <h3>ตรวจสอบ Configuration</h3>
-          <div class="why"> ตรวจก่อน restart ว่าการตั้งค่าไม่มี Error</div>
-          <div class="code-wrap">
-            <div class="code-header"><span>bash</span><button class="copy-btn"
-                data-code="sudo crowdsec -t">คัดลอก</button></div>
-            <pre><code>sudo crowdsec -t</code></pre>
-          </div>
-        </div>
-        <div class="step">
-          <span class="step-mark">10.2</span>
-          <h3>Restart CrowdSec</h3>
-          <div class="code-wrap">
-            <div class="code-header"><span>bash</span><button class="copy-btn"
-                data-code="sudo systemctl restart crowdsec">คัดลอก</button></div>
-            <pre><code>sudo systemctl restart crowdsec</code></pre>
-          </div>
-        </div>
-        <div class="step">
-          <span class="step-mark">10.3</span>
-          <h3>ตรวจสอบสถานะ</h3>
-          <div class="code-wrap">
-            <div class="code-header"><span>bash</span><button class="copy-btn"
-                data-code="sudo systemctl status crowdsec">คัดลอก</button></div>
-            <pre><code>sudo systemctl status crowdsec</code></pre>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============ ตอน 11 ============ -->
-    <section id="part11">
-      <div class="section-head open" onclick="toggle(this)">
-        <span class="num">11</span>
-        <h2>ทดสอบระบบทั้งหมด</h2><span class="chev">▾</span>
-      </div>
-      <div class="section-body open">
-        <div class="step">
-          <span class="step-mark">11.1</span>
-          <h3>ทดสอบ Discord Notification</h3>
-          <div class="code-wrap">
-            <div class="code-header"><span>bash</span><button class="copy-btn"
-                data-code="sudo cscli notifications test discord_default">คัดลอก</button></div>
-            <pre><code>sudo cscli notifications test discord_default</code></pre>
-          </div>
-          <p>ถ้าตั้งค่า Webhook ถูกต้อง ควรได้รับข้อความใน Discord</p>
-        </div>
-        <div class="step">
-          <span class="step-mark">11.2</span>
-          <h3>สร้าง Decision จำลอง</h3>
-          <div class="why"> เพื่อทดสอบว่า Bouncer บล็อก IP ผ่าน Firewall จริงหรือไม่</div>
-          <div class="code-wrap">
-            <div class="code-header"><span>bash</span><button class="copy-btn"
-                data-code="sudo cscli decisions add --ip 1.1.1.1 --type ban">คัดลอก</button></div>
-            <pre><code>sudo cscli decisions add --ip 1.1.1.1 --type ban</code></pre>
-          </div>
-        </div>
-        <div class="step">
-          <span class="step-mark">11.3</span>
-          <h3>ตรวจสอบ Decision ถูกสร้าง</h3>
-          <div class="code-wrap">
-            <div class="code-header"><span>bash</span><button class="copy-btn"
-                data-code="sudo cscli decisions list">คัดลอก</button></div>
-            <pre><code>sudo cscli decisions list</code></pre>
-          </div>
-        </div>
-        <div class="step">
-          <span class="step-mark">11.4</span>
-          <h3>ตรวจสอบ Firewall Rules</h3>
-          <div class="code-wrap">
-            <div class="code-header"><span>bash</span><button class="copy-btn"
-                data-code="sudo nft list ruleset">คัดลอก</button></div>
-            <pre><code>sudo nft list ruleset</code></pre>
-          </div>
-          <p>ตรวจสอบว่ามี Rule ที่เกี่ยวข้องกับ CrowdSec ปรากฏ</p>
-        </div>
-        <div class="step">
-          <span class="step-mark">11.5</span>
-          <h3>ลบ IP ที่ใช้ทดสอบ</h3>
-          <div class="why"> ลบ Decision ทดสอบทิ้งเพื่อความปลอดภัย</div>
-          <div class="code-wrap">
-            <div class="code-header"><span>bash</span><button class="copy-btn"
-                data-code="sudo cscli decisions delete --ip 1.1.1.1">คัดลอก</button></div>
-            <pre><code>sudo cscli decisions delete --ip 1.1.1.1</code></pre>
-          </div>
-        </div>
-        <div class="step">
-          <span class="step-mark">11.6</span>
-          <h3>ตรวจสอบ Bouncer</h3>
-          <div class="code-wrap">
-            <div class="code-header"><span>bash</span><button class="copy-btn"
-                data-code="sudo cscli bouncers list">คัดลอก</button></div>
-            <pre><code>sudo cscli bouncers list</code></pre>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <!-- ============ ชุดคำสั่ง ============ -->
     <section id="cheatsheet">
       <div class="section-head open" onclick="toggle(this)">
