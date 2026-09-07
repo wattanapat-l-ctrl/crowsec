@@ -883,9 +883,6 @@ sudo nft list ruleset</code></pre>
 
         <div class="callout ok"><b>🎯 สรุปสุดท้าย</b>ระบบทำงานอัตโนมัติตามลำดับ:<br><b>SSH Log → CrowdSec ตรวจจับ →
             Alert → Decision → Firewall Bouncer บล็อก IP → Discord แจ้งเตือน</b></div>
-
-        <h3>✅ Checklist ส่งงาน (ติ๊กเมื่อทำสำเร็จ)</h3>
-        <div id="checklist"></div>
       </div>
     </section>
   </main>
@@ -937,36 +934,6 @@ sudo nft list ruleset</code></pre>
     });
     topbtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
-    // ===== Checklist (persist in localStorage) =====
-    const checklistItems = [
-      'ตอนที่ 1 — CrowdSec Engine ติดตั้งและทำงาน (active (running))',
-      'ตอนที่ 2 — ติดตั้ง crowdsecurity/sshd Collection แล้ว',
-      'ตอนที่ 3 — CrowdSec อ่าน SSH Log ได้ (จำนวน Log เพิ่มขึ้น)',
-      'ตอนที่ 5 — ทดสอบ SSH Brute Force แล้วพบ Alert + Decision',
-      'ตอนที่ 6 — รู้วิธีปลดบล็อก IP',
-      'ตอนที่ 7 — Firewall Bouncer ทำงาน และเชื่อมต่อสำเร็จ',
-      'ตอนที่ 8-9 — ตั้งค่า Discord Webhook และ Profile เรียบร้อย',
-      'ตอนที่ 11 — ทดสอบ Discord แจ้งเตือน + Firewall มี Rule',
-    ];
-    const KEY = 'crowdsec-checklist';
-    let saved = JSON.parse(localStorage.getItem(KEY) || '[]');
-
-    const wrap = document.getElementById('checklist');
-    checklistItems.forEach((text, i) => {
-      const div = document.createElement('div');
-      div.className = 'check-item' + (saved.includes(i) ? ' done' : '');
-      div.innerHTML = `<input type="checkbox" ${saved.includes(i) ? 'checked' : ''}>
-    <label>${text}</label>`;
-      const cb = div.querySelector('input');
-      cb.addEventListener('change', () => {
-        if (cb.checked) { if (!saved.includes(i)) saved.push(i) }
-        else { saved = saved.filter(x => x !== i) }
-        div.classList.toggle('done', cb.checked);
-        localStorage.setItem(KEY, JSON.stringify(saved));
-        document.getElementById('saved').textContent = 'Progress บันทึกอัตโนมัติ ✔';
-      });
-      wrap.appendChild(div);
-    });
   </script>
 </body>
 
