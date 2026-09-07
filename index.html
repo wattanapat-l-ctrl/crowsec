@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📘 คู่มือปฏิบัติการ CrowdSec — SSH Brute Force บน AlmaLinux</title>
+<meta name="description" content="สื่อการสอน Step-by-step: ติดตั้ง CrowdSec ตรวจจับ SSH Brute Force บน AlmaLinux พร้อมปุ่ม Copy Code และ Checklist ส่งงาน">
+<style>
+:root{
+  --bg:#f4f6fb;--bg2:#f1f5f9;--card:#ffffff;--border:#e2e8f0;
+  --text:#1f2937;--muted:#64748b;--accent:#2563eb;--accent2:#7c3aed;
+  --green:#16a34a;--yellow:#d97706;--red:#dc2626;--code-bg:#1e293b;
+  --codetext:#e2e8f0;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+  background:
+    radial-gradient(900px 400px at 85% -5%, #dbeafe55, transparent),
+    radial-gradient(700px 350px at 0% 10%, #ede9fe44, transparent),
+    var(--bg);
+  color:var(--text);line-height:1.7;
+}
+/* ===== Progress bar ===== */
+#progressbar{position:fixed;top:0;left:0;height:4px;width:0;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));z-index:1000}
+/* ===== Header ===== */
+header{padding:2.5rem 1.25rem 2rem;text-align:center;border-bottom:1px solid var(--border);
+  background:linear-gradient(180deg,#eef2ff,transparent)}
+header h1{font-size:clamp(1.5rem,4vw,2.4rem);margin-bottom:.5rem;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+header p{color:var(--muted);max-width:720px;margin:0 auto}
+.badges{margin-top:1rem;display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap}
+.badge{background:var(--card);border:1px solid var(--border);border-radius:999px;
+  padding:.25rem .9rem;font-size:.8rem;color:var(--muted)}
+/* ===== Layout ===== */
+main{max-width:900px;margin:0 auto;padding:2rem 1.25rem 4rem}
+section{margin-bottom:2.5rem;background:var(--card);border:1px solid var(--border);
+  border-radius:14px;overflow:hidden}
+.section-head{display:flex;align-items:center;gap:1rem;padding:1.1rem 1.4rem;
+  border-bottom:1px solid var(--border);cursor:pointer;user-select:none}
+.section-head .num{font-size:1.3rem;font-weight:800;min-width:2.2rem;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.section-head h2{flex:1;font-size:1.15rem}
+.section-head .chev{transition:.25s;color:var(--muted)}
+.section-head.open .chev{transform:rotate(180deg)}
+.section-body{display:none;padding:1.4rem}
+.section-body.open{display:block}
+/* ===== content ===== */
+.step{margin-bottom:1.5rem}
+.step-mark{display:inline-flex;align-items:center;justify-content:center;width:2rem;height:2rem;
+  border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#ffffff;font-weight:800;font-size:.85rem;margin-bottom:.5rem}
+.step h3{font-size:1.05rem;margin-bottom:.4rem}
+.step .why{background:#eef2ff;border-left:3px solid var(--accent);
+  border-radius:6px;padding:.6rem 1rem;font-size:.9rem;color:#475569;margin-bottom:.8rem}
+.step .why b{color:var(--accent)}
+/* ===== Code block ===== */
+.code-wrap{position:relative;margin:.7rem 0;border-radius:10px;overflow:hidden;
+  background:var(--code-bg);border:1px solid var(--border)}
+.code-header{display:flex;align-items:center;justify-content:space-between;
+  padding:.4rem .9rem;background:#16233a;border-bottom:1px solid #223049;font-size:.75rem;color:#94a3b8}
+.copy-btn{cursor:pointer;background:#2563eb;color:#ffffff;border:none;
+  padding:.3rem .8rem;border-radius:6px;font-weight:700;font-size:.75rem;transition:.2s}
+.copy-btn:hover{filter:brightness(1.15)}
+.copy-btn.copied{background:var(--green)}
+pre{margin:0;padding:1rem 1.1rem;overflow-x:auto;font-family:'Consolas','Cascadia Code',monospace;
+  font-size:.86rem;line-height:1.6}
+pre code{white-space:pre;color:var(--codetext)}
+pre.code-yaml code{color:#fde68a}
+/* text output */
+.output{background:#eef2ff;border:1px dashed #c7d2fe;border-radius:8px;
+  padding:.8rem 1rem;font-family:monospace;font-size:.85rem;color:var(--green)}
+/* ===== callout ===== */
+.callout{border-radius:10px;padding:1rem 1.2rem;margin:1rem 0;border-left:4px solid;font-size:.92rem}
+.callout.info{background:#dbeafe;border-color:var(--accent)}
+.callout.warn{background:#fef3c7;border-color:var(--yellow)}
+.callout.ok{background:#dcfce7;border-color:var(--green)}
+.callout b{display:block;margin-bottom:.2rem}
+/* ===== tables ===== */
+table{width:100%;border-collapse:collapse;margin:1rem 0;font-size:.9rem}
+th,td{padding:.6rem .9rem;border:1px solid var(--border);text-align:left}
+th{background:#eef2ff;color:var(--accent)}
+tr:nth-child(even) td{background:#f8fafc}
+/* ===== checklist ===== */
+.check-item{display:flex;align-items:flex-start;gap:.7rem;padding:.6rem .4rem;
+  border-bottom:1px dashed var(--border);cursor:pointer}
+.check-item:last-child{border-bottom:none}
+.check-item input{width:1.2rem;height:1.2rem;margin-top:.3rem;accent-color:var(--accent);cursor:pointer}
+.check-item.done label{color:var(--muted);text-decoration:line-through}
+.check-item label{flex:1;font-size:.92rem}
+/* ===== diagram ===== */
+.flow{display:flex;flex-direction:column;align-items:center;gap:.2rem;margin:1rem 0}
+.flow .node{background:var(--bg2);border:1px solid var(--border);border-radius:8px;
+  padding:.45rem 1.1rem;font-size:.88rem}
+.flow .arr{color:var(--accent);font-size:1rem}
+/* ===== footer ===== */
+footer{text-align:center;padding:2rem 1rem;color:var(--muted);font-size:.85rem;
+  border-top:1px solid var(--border)}
+/* ===== Toast ===== */
+#toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(30px);
+  background:var(--green);color:#ffffff;padding:.6rem 1.2rem;border-radius:8px;
+  font-weight:700;font-size:.9rem;opacity:0;transition:.3s;pointer-events:none;z-index:1001}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+/* ===== top button ===== */
+#topbtn{position:fixed;bottom:1.5rem;right:1.5rem;width:2.8rem;height:2.8rem;border-radius:10px;
+  background:var(--card);border:1px solid var(--border);color:var(--accent);font-size:1.2rem;
+  cursor:pointer;display:none;z-index:999}
+#topbtn.show{display:block}
+@media (max-width:600px){
+  .section-body{padding:1rem}
+  pre{font-size:.78rem;padding:.8rem}
+}
+</style>
+</head>
+<body>
+
+<div id="progressbar"></div>
+<div id="toast">✅ คัดลอกแล้ว!</div>
+<button id="topbtn" title="กลับขึ้นบน">↑</button>
+
+<header>
+  <h1>📘 CrowdSec — ตรวจจับ SSH Brute Force บน AlmaLinux</h1>
+</header>
+
+<main>
+  <!-- ============ ภาพรวม ============ -->
+  <section id="overview">
+    <div class="section-head open" onclick="toggle(this)">
+      <span class="num">§</span><h2>ภาพรวมของระบบ</h2><span class="chev">▾</span>
+    </div>
+    <div class="section-body open">
+      <p>เราจะสร้างระบบที่ช่วย <b>จับ IP ที่พยายาม Login SSH ผิดซ้ำ ๆ แล้วบล็อกอัตโนมัติ พร้อมแจ้งเตือนไปยัง Discord</b></p>
+      <table>
+        <tr><th>ส่วนประกอบ</th><th>หน้าที่</th></tr>
+        <tr><td>1️⃣ CrowdSec Engine</td><td>อ่าน Log และวิเคราะห์พฤติกรรมผิดปกติ</td></tr>
+        <tr><td>2️⃣ SSH Collection</td><td>ตรวจจับเหตุการณ์ที่เกี่ยวข้องกับ SSH</td></tr>
+        <tr><td>3️⃣ Firewall Bouncer</td><td>นำผลอนุมัติไปบล็อก IP ผ่าน Firewall</td></tr>
+        <tr><td>4️⃣ Discord Notification</td><td>แจ้งเตือนผู้ดูแลระบบทันที</td></tr>
+      </table>
+      <h3>แผนผังลำดับการทำงาน</h3>
+      <div class="flow">
+        <div class="node">ผู้โจมตี Login SSH ผิดหลายครั้ง</div><div class="arr">↓</div>
+        <div class="node">SSHD</div><div class="arr">↓</div>
+        <div class="node">SSH Log</div><div class="arr">↓</div>
+        <div class="node">CrowdSec Engine</div><div class="arr">↓</div>
+        <div class="node">SSH Collection</div><div class="arr">↓</div>
+        <div class="node">Alert</div><div class="arr">↓</div>
+        <div class="node">Decision</div><div class="arr">↓</div>
+        <div class="node">Firewall Bouncer</div><div class="arr">↓</div>
+        <div class="node">Firewall Block</div><div class="arr">↓</div>
+        <div class="node">Discord Notification</div><div class="arr">↓</div>
+        <div class="node">แจ้งเตือนผู้ดูแลระบบ</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ตอน 1 ============ -->
+  <section id="part1">
+    <div class="section-head open" onclick="toggle(this)">
+      <span class="num">1</span><h2>ติดตั้ง CrowdSec Security Engine</h2><span class="chev">▾</span>
+    </div>
+    <div class="section-body open">
+      <p>ติดตั้งตัว "สมอง" ของระบบ — CrowdSec Engine ที่อ่าน Log และวิเคราะห์</p>
+
+      <div class="step">
+        <span class="step-mark">1.1</span>
+        <h3>เพิ่ม Repository ของ CrowdSec</h3>
+        <div class="why"><b>ทำไม?</b> เพื่อเพิ่มแหล่งซอฟต์แวร์ให้ระบบรู้จักว่าควรหา CrowdSec จากที่ไหน</div>
+        <div class="code-wrap">
+          <div class="code-header"><span>bash</span><button class="copy-btn" data-code="curl -s https://install.crowdsec.net | sudo sh">คัดลอก</button></div>
+          <pre><code>curl -s https://install.crowdsec.net | sudo sh</code></pre>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-mark">1.2</span>
+        <h3>ติดตั้ง CrowdSec</h3>
+        <div class="why"><b>ทำไม?</b> คำสั่ง <code>dnf install</code> ใช้ติดตั้งตัว CrowdSec Engine — <code>-y</code> = ยืนยันอัตโนมัติ</div>
+        <div class="code-wrap">
+          <div class="code-header"><span>bash</span><button class="copy-btn" data-code="sudo dnf install crowdsec -y">คัดลอก</button></div>
+          <pre><code>sudo dnf install crowdsec -y</code></pre>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-mark">1.3</span>
+        <h3>เปิดใช้งาน CrowdSec</h3>
+        <div class="why"><b>ทำไม?</b> <code>enable</code> = เปิดอัตโนมัติตอนบูตเครื่อง, <code>--now</code> = เริ่มทำงานทันที</div>
+        <div class="code-wrap">
+          <div class="code-header"><span>bash</span><button class="copy-btn" data-code="sudo systemctl enable --now crowdsec">คัดลอก</button></div>
+          <pre><code>sudo systemctl enable --now crowdsec</code></pre>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-mark">1.4</span>
+        <h3>ตรวจสอบสถานะ</h3>
+        <div class="code-wrap">
+          <div class="code-header"><span>bash</span><button class="copy-btn" data-code="sudo systemctl status crowdsec">คัดลอก</button></div>
+          <pre><code>sudo systemctl status crowdsec</code></pre>
+        </div>
+        <p>ผลลัพธ์ที่ควรเห็น:</p>
+        <div class="output">active (running)</div>
+        <div class="callout ok"><b>✅ ตรวจสอบสำเร็จ</b>ถ้าเห็น <code>active (running)</code> แปลว่า CrowdSec ทำงานเรียบร้อย<br>ถ้าเห็น <code>inactive</code> / <code>failed</code> ให้ย้อนตรวจสอบขั้นก่อนหน้า</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ตอน 2 ============ -->
+  <section id="part2">
+    <div class="section-head open" onclick="toggle(this)">
+      <span class="num">2</span><h2>ติดตั้ง Collection สำหรับ SSH</h2><span class="chev">▾</span>
+    </div>
+    <div class="section-body open">
+      <p>Collection เปรียบเสมือน "โมดูล" ที่บอก CrowdSec ว่าควรหาอะไรใน Log SSH</p>
+
+      <div class="step">
+        <span class="step-mark">2.1</span>
+        <h3>ติดตั้ง SSH Collection</h3>
+        <div class="why"><b>ทำไม?</b> Collection <code>crowdsecurity/sshd</code> มีกฎสำหรับตรวจจับการ Login ผิดซ้ำผ่าน SSH</div>
+        <div class="code-wrap">
+          <div class="code-header"><span>bash</span><button class="copy-btn" data-code="sudo cscli collections install crowdsecurity/sshd">คัดลอก</button></div>
+          <pre><code>sudo cscli collections install crowdsecurity/sshd</code></pre>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-mark">2.2</span>
+        <h3>ตรวจสอบ Collection</h3>
+        <div class="code-wrap">
+          <div class="code-header"><span>bash</span><button class="copy-btn" data-code="sudo cscli collections list">คัดลอก</button></div>
+          <pre><code>sudo cscli collections list</code></pre>
+        </div>
+        <p>ควรพบรายการ:</p>
+        <div class="output">crowdsecurity/sshd</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ตอน 3 ============ -->
+  <section id="part3">
+    <div class="section-head open" onclick="toggle(this)">
+      <span class="num">3</span><h2>ตรวจสอบว่า CrowdSec อ่าน Log ได้</h2><span class="chev">▾</span>
+    </div>
+    <div class="section-body open">
+      <div class="step">
+        <span class="step-mark">3.1</span>
+        <h3>ดูสถิติการอ่าน Log (Acquisition)</h3>
+        <div class="code-wrap">
+          <div class="code-header"><span>bash</span><button class="copy-btn" data-code="sudo cscli metrics show acquisition">คัดลอก</button></div>
+          <pre><code>sudo cscli metrics show acquisition</code></pre>
+        </div>
+        <p>หรือดูภาพรวมทั้งหมด:</p>
+        <div class="code-wrap">
+          <div class="code-header"><span>bash</span><button class="copy-btn" data-code="sudo cscli metrics">คัดลอก</button></div>
+          <pre><code>sudo cscli metrics</code></pre>
+        </div>
+        <div class="callout ok"><b>✅ ตรวจสอบสำเร็จ</b>ควรเห็น <b>Log Source ของ SSH</b> และ <b>จำนวน Log ที่อ่านเพิ่มขึ้น</b> แปลว่าระบบ Acquisition ทำงานถูกต้อง</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ตอน 4 ============ -->
+  <section id="part4">
+    <div class="section-head open" onclick="toggle(this)">
+      <span class="num">4</span><h2>ตรวจสอบ Alert และ Decision</h2><span class="chev">▾</span>
+    </div>
+    <div class="section-body open">
+      <div class="step">
+        <span class="step-mark">4.1</span>
+        <h3>ดู Decision</h3>
+        <div class="why"><b>Decision</b> = "คำสั่ง" เช่น ให้ Ban IP นี้</div>
+        <div class="code-wrap">
+          <div class="code-header"><span>bash</span><button class="copy-btn" data-code="sudo cscli decisions list">คัดลอก</button></div>
+          <pre><code>sudo cscli decisions list</code></pre>
+        </div>
+        <div class="callout warn"><b>⚠️ ข้อควรรู้</b>ในตอนนี้ CrowdSec Engine <b>แค่สร้าง Decision</b> ยังไม่ได้บล็อก IP จริง — ต้องรอ Firewall Bouncer (ตอนที่ 7)</div>
+      </div>
+      <div class="step">
+        <span class="step-mark">4.2</span>
+        <h3>ดู Alert</h3>
+        <div class="why"><b>Alert</b> = "บันทึก" เหตุการณ์ที่พบว่าผิดปกติ</div>
+        <div class="code-wrap">
+          <div class="code-header"><span>bash</span><button class="copy-btn" data-code="sudo cscli alerts list">คัดลอก</button></div>
+          <pre><code>sudo cscli alerts list</code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ตอน 5 ============ -->
+  <section id="part5">
+    <div class="section-head open" onclick="toggle(this)">
+      <span class="num">5</span><h2>ทดสอบการตรวจจับ SSH Brute Force</h2><span class="chev">▾</span>
+    </div>
+    <div class="section-body open">
+      <div class="step">
+        <span class="step-mark">5.1</span>
+        <h3>ทดสอบจากเครื่องอื่น</h3>
+        <div class="why"><b>ทำไม?</b> เพื่อยืนยันว่า CrowdSec จับ IP ที่ Login ผิดซ้ำได้จริง<br>ใส่ <code>testuser</code> และกรอกรหัสผ่านผิดติดกัน 10+ ครั้ง</div>
+        <div class="code-wrap">
+          <div class="code-header"><span>bash</span><button class="copy-btn" data-code="ssh testuser@IP_ALMALINUX">คัดลอก</button></div>
+          <pre><code>ssh testuser@IP_ALMALINUX</code></pre>
+        </div>
+      </div>
+      <div class="step">
+        <span class="step-mark">5.2</span>
+        <h3>ทางลัด: จำลอง Login ล้มเหลวด้วย logger (ไม่ต้องมีเครื่องอื่น)</h3>
+        <div class="why"><b>ทำไม?</b> การใส่รหัสผ่านจริง ๆ ซ้ำ ๆ อาจช้าและผิดพลาด ให้ใช้คำสั่งนี้เขียนแถว Log SSH ปลอมลงในระบบแทน — รัน <b>ติดกัน 5–6 ครั้ง</b> เพื่อจำลองการ Login SSH ล้มเหลวจาก IP เดียวกันซ้ำ ๆ</div>
+        <div class="code-wrap">
+          <div class="code-header"><span>bash</span><button class="copy-btn" data-code='logger -t sshd "Failed password for invalid user testuser from 198.51.100.50 port 54321 ssh2"'>คัดลอก</button></div>
+          <pre><code>logger -t sshd "Failed password for invalid user testuser from 198.51.100.50 port 54321 ssh2"</code></pre>
+        </div>
+        <p>รันคำสั่งซ้ำ <b>5–6 ครั้งติดกัน</b> เช่น:</p>
+        <div class="code-wrap">
+          <div class="code-header"><span>bash</span><button class="copy-btn" data-code='logger -t sshd "Failed password for invalid user testuser from 198.51.100.50 port 54321 ssh2"
+logger -t sshd "Failed password for invalid user testuser from 198.51.100.50 port 54321 ssh2"
+logger -t sshd "Failed password for invalid user testuser from 198.51.100.50 port 54321 ssh2"
+logger -t sshd "Failed password for invalid user testuser from 198.51.100.50 port 54321 ssh2"
+logger -t sshd "Failed password for invalid user testuser from 198.51.100.50 port 54321 ssh2"
+logger -t sshd "Failed password for invalid user testuser from 198.51.100.50 port 54321 ssh2"'>คัดลอกทั้งชุด</button></div>
+          <pre><code>logger -t sshd "Failed password for invalid user testuser from 198.51.100.50 port 54321 ssh2"
+logger -t sshd "Failed password for invalid user testuser from 198.51.100.50 port 54321 ssh2"
+logger -t sshd "Failed password for invalid user testuser from 198.51.100.50 port 54321 ssh2"
+logger -t sshd "Failed password for invalid user testuser from 198.51.100.50 port 54321 ssh2"
+logger -t sshd "Failed password for invalid user testuser from 198.51.100.50 port 54321 ssh2"
+logger -t sshd "Failed password for invalid user testuser from 198.51.100.50 port 54321 ssh2"</code></pre>
+        </div>
+        <div class="callout warn"><b>⚠️ หมายเหตุ</b>วิธีจำลองนี้ใช้ได้เฉพาะการทดสอบเท่านั้น เพราะ Log ที่สร้างขึ้นอาจไม่ตรงรูปแบบ Native ของ SSHD 100% — ถ้าอยากได้ผลลัพธ์แม่นยำจริง ยังแนะนำให้ใช้การ Login จริงจากเครื่องอื่น (ขั้น 5.1)</div>
+      </div>
+      <div class="step">
+        <span class="step-mark">5.3</span>
+        <h3>กลับมาตรวจสอบ Alert</h3>
+        <div class="code-wrap">
+          <div class="code-header"><span>bash</span><button class="copy-btn" data-code="sudo cscli alerts list">คัดลอก</button></div>
+          <pre><code>sudo cscli alerts list</code></pre>
+        </div>
+      </div>
+      <div class="step">
+        <span class="step-mark">5.4</span>
+        <h3>ตรวจสอบ Decision</h3>
+        <div class="code-wrap">
+          <div class="code-header"><span>bash</span><button class="copy-btn" data-code="sudo cscli decisions list">คัดลอก</button></div>
+          <pre><code>sudo cscli decisions list</code></pre>
+        </div>
+        <div class="callout ok"><b>✅ ตรวจสอบสำเร็จ</b>จะพบ <b>Alert</b> และ <b>Decision</b> ของ IP ที่มีพฤติกรรมน่าสงสัย</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ตอน 6 ============ -->
+  <section id="part6">
+    <div class="section-head open" onclick="toggle(this)">
+      <span class="num">6</span><h2>การปลดบล็อก IP</h2><span class="chev">▾</span>
+    </div>
+    <div class="section-body open">
+      <div class="step">
+        <span class="step-mark">6.1</span>
+        <h3>ปลดบล็อก IP ที่ระบุ</h3>
+        <div class="code-wrap">
+          <div class="code-header"><span>bash</span><button class="copy-btn" data-code="sudo cscli decisions delete --ip <IP_ที่ต้องการปลดบล็อก>">คัดลอก</button></div>
+          <pre><code>sudo cscli decisions delete --ip &lt;IP_ที่ต้องการปลดบล็อก&gt;</code></pre>
+        </div>
+        <p>ตัวอย่าง:</p>
+        <div class="code-wrap">
+          <div class="code-header"><span>bash</span><button class="copy-btn" data-code="sudo cscli decisions delete --ip 192.168.1.100">คัดลอก</button></div>
+          <pre><code>sudo cscli decisions delete --ip 192.168.1.100</code></pre>
+        </div>
+      </div>
+      <div class="step">
+        <span class="step-mark">6.2</span>
+        <h3>ลบ Decision ทั้งหมด</h3>
+        <div class="code-wrap">
+          <div class="code-header"><span>bash</span><button class="copy-btn" data-code="sudo cscli decisions delete --all">คัดลอก</button></div>
+          <pre><code>sudo cscli decisions delete --all</code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ตอน 7 ============ -->
+  <section id="part7">
+    <div class="section-head open" onclick="toggle(this)">
+      <span class="num">7</span><h2>ติดตั้ง Firewall Bouncer</h2><span class="chev">▾</span>
+    </div>
+    <div class="section-body open">
+      <div class="callout info"><b>💡 ทำไมต้องมี Bouncer?</b> CrowdSec Engine <b>แค่สร้าง Decision แต่ไม่บล็อก IP เอง</b> — Bouncer คอยนำ Decision ไปสั่ง Firewall (nftables) ให้บล็อกจริง</div>
+
+      <div class="step">
+        <span class="step-mark">7.1</span>
+        <h3>ติดตั้ง Bouncer</h3>
+        <div class="code-wrap">
+          <div class="code-header"><span>bash</span><button class="copy-btn" data-code="sudo dnf install -y crowdsec-firewall-bouncer-nftables">คัดลอก</button></div>
+          <pre><code>sudo dnf install -y crowdsec-firewall-bouncer-nftables</code></pre>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-mark">7.2</span>
+        <h3>เปิดใช้งาน Bouncer</h3>
+        <div class="code-wrap">
+          <div class="code-header"><span>bash</span><button class="copy-btn" data-code="sudo systemctl enable --now crowdsec-firewall-bouncer">คัดลอก</button></div>
+          <pre><code>sudo systemctl enable --now crowdsec-firewall-bouncer</code></pre>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-mark">7.3</span>
+        <h3>ตรวจสอบสถานะ</h3>
+        <div class="code-wrap">
+          <div class="code-header"><span>bash</span><button class="copy-btn" data-code="sudo systemctl status crowdsec-firewall-bouncer">คัดลอก</button></div>
+          <pre><code>sudo systemctl status crowdsec-firewall-bouncer</code></pre>
+        </div>
+        <div class="output">active (running)</div>
+      </div>
+
+      <div class="step">
+        <span class="step-mark">7.4</span>
+        <h3>ตรวจสอบว่า Bouncer เชื่อมต่อกับ CrowdSec</h3>
+        <div class="code-wrap">
+          <div class="code-header"><span>bash</span><button class="copy-btn" data-code="sudo cscli bouncers list">คัดลอก</button></div>
+          <pre><code>sudo cscli bouncers list</code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ตอน 8 ============ -->
+  <section id="part8">
+    <div class="section-head open" onclick="toggle(this)">
+      <span class="num">8</span><h2>ตั้งค่า Discord Notification</h2><span class="chev">▾</span>
+    </div>
+    <div class="section-body open">
+      <div class="step">
+        <span class="step-mark">8.1</span>
+        <h3>เปิดไฟล์ Notification</h3>
+        <div class="code-wrap">
+          <div class="code-header"><span>bash</span><button class="copy-btn" data-code="sudo nano /etc/crowdsec/notifications/http.yaml">คัดลอก</button></div>
+          <pre><code>sudo nano /etc/crowdsec/notifications/http.yaml</code></pre>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-mark">8.2</span>
+        <h3>ใส่ Configuration</h3>
+        <div class="why"><b>ทำไม?</b> รูปแบบ (format) นี้กำหนดว่าข้อความที่ส่งไป Discord จะมี Blocked IP และ Reason</div>
+        <div class="code-wrap">
+          <div class="code-header"><span>yaml</span><button class="copy-btn" data-code='type: http
+
+name: discord_default
+
+log_level: info
+
+format: |
+  {
+    "content": "🚨 **CrowdSec Alert** 🚨\n**Blocked IP:** {{range .}}{{.Source.IP}}{{end}}\n**Reason:** {{range .}}{{.Scenario}}{{end}}"
+  }
+
+timeout: 5s
+
+method: POST
+
+url: "https://discord.com/api/webhooks/YOUR_WEBHOOK_URL_HERE"
+
+headers:
+  Content-Type: application/json'>คัดลอก</button></div>
+          <pre class="code-yaml"><code>type: http
+
+name: discord_default
+
+log_level: info
+
+format: |
+  {
+    "content": "🚨 **CrowdSec Alert** 🚨\n**Blocked IP:** {{range .}}{{.Source.IP}}{{end}}\n**Reason:** {{range .}}{{.Scenario}}{{end}}"
+  }
+
+timeout: 5s
+
+method: POST
+
+url: "https://discord.com/api/webhooks/YOUR_WEBHOOK_URL_HERE"
+
+headers:
+  Content-Type: application/json</code></pre>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-mark">8.3</span>
+        <h3>เปลี่ยน Webhook URL</h3>
+        <div class="why"><b>ทำไม?</b> เติม URL จริงแทนที่ข้อความ <code>YOUR_WEBHOOK_URL_HERE</code> จากช่อง Discord<br>ดูได้ที่ Discord ➜ Server Settings ➜ Integrations ➜ Webhooks</div>
+        <div class="output">YOUR_WEBHOOK_URL_HERE → ใส่ Webhook URL ของคุณ</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ตอน 9 ============ -->
+  <section id="part9">
+    <div class="section-head open" onclick="toggle(this)">
+      <span class="num">9</span><h2>เชื่อม Notification เข้ากับ Profile</h2><span class="chev">▾</span>
+    </div>
+    <div class="section-body open">
+      <div class="step">
+        <span class="step-mark">9.1</span>
+        <h3>เปิดไฟล์ Profile</h3>
+        <div class="code-wrap">
+          <div class="code-header"><span>bash</span><button class="copy-btn" data-code="sudo nano /etc/crowdsec/profiles.yaml">คัดลอก</button></div>
+          <pre><code>sudo nano /etc/crowdsec/profiles.yaml</code></pre>
+        </div>
+      </div>
+
+      <div class="step">
+        <span class="step-mark">9.2</span>
+        <h3>เพิ่ม/แก้ไข Profile</h3>
+        <div class="why"><b>ทำไม?</b> ตัวอย่างใช้งานจริง — มีบรรทัดคอมเมนต์ <code># Administrative profile</code> กำกับหัวข้อไว้ด้วย ใช้แทนทั้งไฟล์ได้เลย</div>
+        <div class="code-wrap">
+          <div class="code-header"><span>yaml</span><button class="copy-btn" data-code='name: default_ip_remediation
+# Administrative profile
+filters:
+ - Alert.Remediation == true && Alert.GetScope() == "Ip"
+decisions:
+ - type: ban
+   duration: 4h
+notifications:
+  - discord_default
+on_success: break'>คัดลอก</button></div>
+          <pre class="code-yaml"><code>name: default_ip_remediation
+# Administrative profile
+filters:
+ - Alert.Remediation == true && Alert.GetScope() == "Ip"
+decisions:
+ - type: ban
+   duration: 4h
+notifications:
+  - discord_default
+on_success: break</code></pre>
+        </div>
+        <div class="callout warn"><b>⚠️ สำคัญมาก</b>ชื่อ <code>discord_default</code> ในไฟล์นี้ <b>ต้องตรงกับ</b> ชื่อในไฟล์ <code>/etc/crowdsec/notifications/http.yaml</code> จึงจะเชื่อมกันได้</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ตอน 10 ============ -->
+  <section id="part10">
+    <div class="section-head open" onclick="toggle(this)">
+      <span class="num">10</span><h2>ตรวจสอบและรีสตาร์ท</h2><span class="chev">▾</span>
+    </div>
+    <div class="section-body open">
+      <div class="step">
+        <span class="step-mark">10.1</span>
+        <h3>ตรวจสอบ Configuration</h3>
+        <div class="why"><b>ทำไม?</b> ตรวจก่อน restart ว่าการตั้งค่าไม่มี Error</div>
+        <div class="code-wrap">
+          <div class="code-header"><span>bash</span><button class="copy-btn" data-code="sudo crowdsec -t">คัดลอก</button></div>
+          <pre><code>sudo crowdsec -t</code></pre>
+        </div>
+      </div>
+      <div class="step">
+        <span class="step-mark">10.2</span>
+        <h3>Restart CrowdSec</h3>
+        <div class="code-wrap">
+          <div class="code-header"><span>bash</span><button class="copy-btn" data-code="sudo systemctl restart crowdsec">คัดลอก</button></div>
+          <pre><code>sudo systemctl restart crowdsec</code></pre>
+        </div>
+      </div>
+      <div class="step">
+        <span class="step-mark">10.3</span>
+        <h3>ตรวจสอบสถานะ</h3>
+        <div class="code-wrap">
+          <div class="code-header"><span>bash</span><button class="copy-btn" data-code="sudo systemctl status crowdsec">คัดลอก</button></div>
+          <pre><code>sudo systemctl status crowdsec</code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ตอน 11 ============ -->
+  <section id="part11">
+    <div class="section-head open" onclick="toggle(this)">
+      <span class="num">11</span><h2>ทดสอบระบบทั้งหมด</h2><span class="chev">▾</span>
+    </div>
+    <div class="section-body open">
+      <div class="step">
+        <span class="step-mark">11.1</span>
+        <h3>ทดสอบ Discord Notification</h3>
+        <div class="code-wrap">
+          <div class="code-header"><span>bash</span><button class="copy-btn" data-code="sudo cscli notifications test discord_default">คัดลอก</button></div>
+          <pre><code>sudo cscli notifications test discord_default</code></pre>
+        </div>
+        <p>ถ้าตั้งค่า Webhook ถูกต้อง ควรได้รับข้อความใน Discord</p>
+      </div>
+      <div class="step">
+        <span class="step-mark">11.2</span>
+        <h3>สร้าง Decision จำลอง</h3>
+        <div class="why"><b>ทำไม?</b> เพื่อทดสอบว่า Bouncer บล็อก IP ผ่าน Firewall จริงหรือไม่</div>
+        <div class="code-wrap">
+          <div class="code-header"><span>bash</span><button class="copy-btn" data-code="sudo cscli decisions add --ip 1.1.1.1 --type ban">คัดลอก</button></div>
+          <pre><code>sudo cscli decisions add --ip 1.1.1.1 --type ban</code></pre>
+        </div>
+      </div>
+      <div class="step">
+        <span class="step-mark">11.3</span>
+        <h3>ตรวจสอบ Decision ถูกสร้าง</h3>
+        <div class="code-wrap">
+          <div class="code-header"><span>bash</span><button class="copy-btn" data-code="sudo cscli decisions list">คัดลอก</button></div>
+          <pre><code>sudo cscli decisions list</code></pre>
+        </div>
+      </div>
+      <div class="step">
+        <span class="step-mark">11.4</span>
+        <h3>ตรวจสอบ Firewall Rules</h3>
+        <div class="code-wrap">
+          <div class="code-header"><span>bash</span><button class="copy-btn" data-code="sudo nft list ruleset">คัดลอก</button></div>
+          <pre><code>sudo nft list ruleset</code></pre>
+        </div>
+        <p>ตรวจสอบว่ามี Rule ที่เกี่ยวข้องกับ CrowdSec ปรากฏ</p>
+      </div>
+      <div class="step">
+        <span class="step-mark">11.5</span>
+        <h3>ลบ IP ที่ใช้ทดสอบ</h3>
+        <div class="why"><b>ทำไม?</b> ลบ Decision ทดสอบทิ้งเพื่อความปลอดภัย</div>
+        <div class="code-wrap">
+          <div class="code-header"><span>bash</span><button class="copy-btn" data-code="sudo cscli decisions delete --ip 1.1.1.1">คัดลอก</button></div>
+          <pre><code>sudo cscli decisions delete --ip 1.1.1.1</code></pre>
+        </div>
+      </div>
+      <div class="step">
+        <span class="step-mark">11.6</span>
+        <h3>ตรวจสอบ Bouncer</h3>
+        <div class="code-wrap">
+          <div class="code-header"><span>bash</span><button class="copy-btn" data-code="sudo cscli bouncers list">คัดลอก</button></div>
+          <pre><code>sudo cscli bouncers list</code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ชุดคำสั่ง ============ -->
+  <section id="cheatsheet">
+    <div class="section-head open" onclick="toggle(this)">
+      <span class="num">#</span><h2>🧰 ชุดคำสั่งตรวจสอบระบบ (Cheat Sheet)</h2><span class="chev">▾</span>
+    </div>
+    <div class="section-body open">
+      <p>เก็บไว้ใช้บ่อย ๆ — กดคัดลอกทั้งชุดได้:</p>
+      <div class="code-wrap">
+        <div class="code-header"><span>bash</span><button class="copy-btn" data-code="# ตรวจสอบสถานะ CrowdSec
+sudo systemctl status crowdsec
+
+# ตรวจสอบ Collection
+sudo cscli collections list
+
+# ตรวจสอบ Log Acquisition
+sudo cscli metrics show acquisition
+
+# ดู Alert
+sudo cscli alerts list
+
+# ดู IP ที่ถูก Ban
+sudo cscli decisions list
+
+# ดู Bouncer
+sudo cscli bouncers list
+
+# ตรวจสอบ Firewall
+sudo nft list ruleset">คัดลอกทั้งชุด</button></div>
+        <pre><code># ตรวจสอบสถานะ CrowdSec
+sudo systemctl status crowdsec
+
+# ตรวจสอบ Collection
+sudo cscli collections list
+
+# ตรวจสอบ Log Acquisition
+sudo cscli metrics show acquisition
+
+# ดู Alert
+sudo cscli alerts list
+
+# ดู IP ที่ถูก Ban
+sudo cscli decisions list
+
+# ดู Bouncer
+sudo cscli bouncers list
+
+# ตรวจสอบ Firewall
+sudo nft list ruleset</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ สรุป ============ -->
+  <section id="summary">
+    <div class="section-head open" onclick="toggle(this)">
+      <span class="num">✓</span><h2>สรุป + Checklist ส่งงาน</h2><span class="chev">▾</span>
+    </div>
+    <div class="section-body open">
+      <h3>ตารางสรุปหน้าที่ของแต่ละส่วนประกอบ</h3>
+      <table>
+        <tr><th>ส่วนประกอบ</th><th>หน้าที่</th></tr>
+        <tr><td>CrowdSec Engine</td><td>อ่าน Log และตรวจจับพฤติกรรมผิดปกติ</td></tr>
+        <tr><td>SSH Collection</td><td>วิเคราะห์เหตุการณ์ที่เกี่ยวข้องกับ SSH</td></tr>
+        <tr><td>Alert</td><td>แจ้งว่า CrowdSec ตรวจพบเหตุการณ์ผิดปกติ</td></tr>
+        <tr><td>Decision</td><td>กำหนดการดำเนินการ เช่น Ban IP</td></tr>
+        <tr><td>Firewall Bouncer</td><td>นำ Decision ไปบล็อก IP ผ่าน Firewall</td></tr>
+        <tr><td>Discord Notification</td><td>ส่งการแจ้งเตือนไปยัง Discord</td></tr>
+        <tr><td>nftables</td><td>Firewall ที่ใช้บล็อกการเชื่อมต่อ</td></tr>
+      </table>
+
+      <div class="callout ok"><b>🎯 สรุปสุดท้าย</b>ระบบทำงานอัตโนมัติตามลำดับ:<br><b>SSH Log → CrowdSec ตรวจจับ → Alert → Decision → Firewall Bouncer บล็อก IP → Discord แจ้งเตือน</b></div>
+
+      <h3>✅ Checklist ส่งงาน (ติ๊กเมื่อทำสำเร็จ)</h3>
+      <div id="checklist"></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  📘 สื่อการสอน CrowdSec — SSH Brute Force Detection on AlmaLinux<br>
+  Made with ❤️ for classroom use · <span id="saved"></span>
+</footer>
+
+<script>
+// ===== Collapsible sections =====
+function toggle(head){
+  const body = head.nextElementSibling;
+  const open = body.classList.toggle('open');
+  head.classList.toggle('open', open);
+}
+
+// ===== Copy button =====
+document.querySelectorAll('.copy-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const code = btn.getAttribute('data-code');
+    navigator.clipboard.writeText(code).then(()=>{
+      const orig = btn.textContent;
+      btn.textContent = '✓ คัดลอกแล้ว';
+      btn.classList.add('copied');
+      showToast();
+      setTimeout(()=>{btn.textContent=orig;btn.classList.remove('copied')},1500);
+    });
+  });
+});
+
+// ===== Toast =====
+let toastTimer;
+function showToast(){
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 1500);
+}
+
+// ===== Progress bar + top button =====
+const bar = document.getElementById('progressbar');
+const topbtn = document.getElementById('topbtn');
+window.addEventListener('scroll', ()=>{
+  const h = document.documentElement;
+  const pct = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
+  bar.style.width = pct + '%';
+  topbtn.classList.toggle('show', h.scrollTop > 400);
+});
+topbtn.addEventListener('click', ()=>window.scrollTo({top:0, behavior:'smooth'}));
+
+// ===== Checklist (persist in localStorage) =====
+const checklistItems = [
+  'ตอนที่ 1 — CrowdSec Engine ติดตั้งและทำงาน (active (running))',
+  'ตอนที่ 2 — ติดตั้ง crowdsecurity/sshd Collection แล้ว',
+  'ตอนที่ 3 — CrowdSec อ่าน SSH Log ได้ (จำนวน Log เพิ่มขึ้น)',
+  'ตอนที่ 5 — ทดสอบ SSH Brute Force แล้วพบ Alert + Decision',
+  'ตอนที่ 6 — รู้วิธีปลดบล็อก IP',
+  'ตอนที่ 7 — Firewall Bouncer ทำงาน และเชื่อมต่อสำเร็จ',
+  'ตอนที่ 8-9 — ตั้งค่า Discord Webhook และ Profile เรียบร้อย',
+  'ตอนที่ 11 — ทดสอบ Discord แจ้งเตือน + Firewall มี Rule',
+];
+const KEY = 'crowdsec-checklist';
+let saved = JSON.parse(localStorage.getItem(KEY) || '[]');
+
+const wrap = document.getElementById('checklist');
+checklistItems.forEach((text, i)=>{
+  const div = document.createElement('div');
+  div.className = 'check-item' + (saved.includes(i)?' done':'');
+  div.innerHTML = `<input type="checkbox" ${saved.includes(i)?'checked':''}>
+    <label>${text}</label>`;
+  const cb = div.querySelector('input');
+  cb.addEventListener('change', ()=>{
+    if(cb.checked){ if(!saved.includes(i)) saved.push(i) }
+    else { saved = saved.filter(x=>x!==i) }
+    div.classList.toggle('done', cb.checked);
+    localStorage.setItem(KEY, JSON.stringify(saved));
+    document.getElementById('saved').textContent = 'Progress บันทึกอัตโนมัติ ✔';
+  });
+  wrap.appendChild(div);
+});
+</script>
+</body>
+</html>
